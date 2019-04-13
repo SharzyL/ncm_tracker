@@ -5,7 +5,8 @@ from time import sleep
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from processBar import ProcessBar
 
-def getFollows(uid, pagecount=4,headless=True):
+
+def get_follows(uid, pagecount=4, headless=True):
     options = Options()
     if headless:
         options.add_argument('--headless')
@@ -20,13 +21,14 @@ def getFollows(uid, pagecount=4,headless=True):
             nickname = follower.get_attribute('title')
             uid = re.findall(r'id=(\d+)', href)[0]
             uid_dict[nickname] = uid
-        next = browser.find_element_by_xpath('//*[starts-with(@class, "zbtn znxt")]')
-        browser.execute_script("arguments[0].click();", next)
+        turn_page = browser.find_element_by_xpath('//*[starts-with(@class, "zbtn znxt")]')
+        browser.execute_script("arguments[0].click();", turn_page)
         sleep(0.5)
     browser.quit()
     return uid_dict
 
-def getNum(nickname, uid):
+
+def get_num(nickname, uid):
     options = Options()
     options.add_argument('--headless')
     browser = webdriver.Chrome(options=options)
@@ -35,13 +37,14 @@ def getNum(nickname, uid):
     text = browser.find_element_by_css_selector('#rHeader > h4').text
     browser.quit()
     song_num = int(re.findall(r'\d+', text)[0])
-    return {'uid':uid, 'nickname':nickname, 'song_num':song_num}
+    return {'uid': uid, 'nickname': nickname, 'song_num': song_num}
 
-def getNums(uid_dict):
+
+def get_nums(uid_dict):
     num_dict = {}
     prog_bar = ProcessBar(len(uid_dict))
     executor = ThreadPoolExecutor(max_workers=10)
-    tasks = [executor.submit(prog_bar.wrap(getNum), nickname, uid) for nickname, uid in uid_dict.items()]
+    tasks = [executor.submit(prog_bar.wrap(get_num), nickname, uid) for nickname, uid in uid_dict.items()]
     for future in as_completed(tasks):
         result = future.result()
         nickname = result['nickname']
@@ -49,7 +52,8 @@ def getNums(uid_dict):
         num_dict[nickname] = num
     return num_dict
 
+
 if __name__ == '__main__':
-    uid_dict = getFollows(91540849)
-    num_dict = getNums(uid_dict)
+    uid_dict = get_follows(91540849)
+    num_dict = get_nums(uid_dict)
     print(num_dict)
