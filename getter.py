@@ -55,5 +55,6 @@ def get_nums(uid_dict):
 
 if __name__ == '__main__':
     uid_dict = get_follows(91540849)
-    num_dict = get_nums(uid_dict)
-    print(num_dict)
+    # num_dict = get_nums(uid_dict)
+    # print(num_dict)
+    print(uid_dict)
