@@ -29,13 +29,13 @@ class ProcessBar:
         print('') # print \n
 
     def wrap(self, func):
-        def new_func(*args, **kwargs):
+        def new_func(*args):
             if not self.started:
                 self.start()
-            result = func(*args, **kwargs)
+            result = func(*args)
             self.lock.acquire()
             self.count += 1
             self.output()
             self.lock.release()
-            return result
+            return args + (result,)
         return new_func
