@@ -1,6 +1,17 @@
 import sqlite3
 import os
 import time
+import re
+
+
+def format_nickname(nickname):
+    """
+    由于sql里不允许在列名中出现中划线，故需要把nickname中的中划线转为下划线才能作列名
+
+    :param nickname: 昵称
+    :return: 将标点全部转化为下划线后的昵称
+    """
+    return re.sub(r'\W', '_', nickname)
 
 
 class Database:
@@ -14,7 +25,7 @@ class Database:
         +-------------------------------------+
         | record time | nickname1 | nickname2 |
         +-------------------------------------+
-        | 1423554325  | 1432      | 3241      |
+        | 1423554325  | 1432      | 3241      | //时间戳 + 听歌量 + 听歌量 + ...
         | 1423554923  | 1438      | 3301      |
         +-------------------------------------+
         nickname:
@@ -25,7 +36,8 @@ class Database:
         | 一缕炊烟          | 20452251 |
         | priority_queue  | 324871251|
         +----------------------------+
-        :param db_dir: 数据库文件名称
+
+        :param db_dir: 数据库文件目录
         """
         if os.path.exists(db_dir):
             self.conn = sqlite3.connect(db_dir)
@@ -39,8 +51,9 @@ class Database:
     def tracked(self, reversed=False):
         """
         获取被记录的用户列表
+
         :param reversed: 是否颠倒字典键值
-        :return: 一个形如 nickname:uid 或 uid:nickname (reversed=True) 的字典
+        :return: 一个形如 nickname:uid 或 uid:nickname (reversed=True) 的字典，其中 uid 为int
         """
         self.cursor.execute('SELECT nickname, uid FROM nickname')
         return {row[1]: row[0] for row in self.cursor} if reversed \
@@ -49,18 +62,22 @@ class Database:
     def track(self, uid, nickname):
         """
         将某个用户添加到记录列表
-        :param uid: UID
-        :param nickname: 昵称
+
+        :param uid: (int/str) UID
+        :param nickname: (str) 昵称
         :return: None
         """
+        nickname = format_nickname(nickname)
         self.cursor.execute('INSERT INTO nickname (uid, nickname) VALUES (?, ?)', (uid, nickname))
         self.cursor.execute('ALTER TABLE song_record ADD COLUMN %s INT' % (nickname,))
 
     def untrack(self, nickname_list):
         """
-        取消对某些人记录，并将他的数据从数据库中删除，无返回值
+        取消对某些人记录，并将他的数据从数据库中删除
         提供批量操作是因为sqlite里删除列的操作比较慢
-        :param nickname_list: 被删除的人的列表（当只有一个人时可以不放入列表中）
+
+        :param nickname_list: 被删除的人的昵称列表（当只有一个人时可以不放入列表中）
+        :return: None
         """
         if not isinstance(nickname_list, list):
             nickname_list = [nickname_list]
@@ -77,6 +94,7 @@ class Database:
     def record(self, data_dict):
         """
         将一次记录添加进数据库中
+
         :param data_dict: 由 昵称:听歌量 组成的字典
         :return: None
         """
@@ -84,22 +102,36 @@ class Database:
         nickname_tuple = ('record_time',) + tuple((str(nickname) for nickname in data_dict))
         num_tuple = (t,) + tuple(data_dict.values())
         self.cursor.execute('SELECT * FROM song_record')
-        ins = 'INSERT INTO song_record %s VALUES %s' % (nickname_tuple, num_tuple)
-        self.cursor.execute(ins)
+        self.cursor.execute('INSERT INTO song_record %s VALUES %s' % (nickname_tuple, num_tuple))
 
     def fetch_data(self, nickname):
         """
         获取某人听歌量数据
+
         :param nickname: 昵称
-        :return: 有 时间戳:听歌量 组成的字典，其中时间戳是float形式
+        :return: 由 时间戳:听歌量 组成的字典，其中时间戳是float形式
         """
         self.cursor.execute('SELECT record_time, %s from song_record' % (nickname,))
         return {record_time: song_num for record_time, song_num in self.cursor.fetchall()}
 
-    def commit(self):
+    def commit(self, close=True):
         """
         提交对数据库的修改
+
+        :param close: 是否关闭cursor
         :return: None
         """
         self.conn.commit()
-        self.cursor.close()
+        if close:
+            self.cursor.close()
+
+    def rollback(self, close=True):
+        """
+        放弃对数据库的修改
+
+        :param close: 是否关闭cursor
+        :return: None
+        """
+        self.conn.rollback()
+        if close:
+            self.cursor.close()

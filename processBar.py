@@ -22,6 +22,7 @@ class ProcessBar:
     def _start(self):
         """
         在第一个任务开始时自动调用，记录当前时间
+
         :return: None
         """
         self.started = True
@@ -32,6 +33,7 @@ class ProcessBar:
         在每个任务完成时调用，显示一个类似于
         [#########           ] 12 / 30 time:32.1s
         的进度条，并换行
+
         :return: None
         """
         length = 50
@@ -44,11 +46,12 @@ class ProcessBar:
         if self.show_time:
             seconds = time.time() - self.start_time
             print('time:%.1fs' % seconds, end='')
-        print('') # print \n
+        print('') # 换行
 
     def wrap(self, func):
         """
         装饰器函数，调用装饰的函数，并在它完成后显示进度条
+
         :param func: 被装饰的函数（暂不支持**kwargs)
         :return: 由参数序对与返回值所连接成的序对
         """

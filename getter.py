@@ -6,18 +6,10 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from processBar import ProcessBar
 
 
-def format_nickname(nickname):
-    """
-    由于sql里不允许在列名中出现中划线，故需要把nickname中的中划线转为下划线才能作列名
-    :param nickname: 昵称
-    :return: 将标点全部转化为下划线后的昵称
-    """
-    return re.sub(r'\W', '_', nickname)
-
-
 def get_follows(uid, headless=True):
     """
     根据uid获取关注者信息
+
     :param uid: UID
     :param headless: 是否不显示浏览器界面，默认不显示
     :return: 由 nickname:uid 形成的字典
@@ -48,6 +40,7 @@ def get_follows(uid, headless=True):
 def get_nickname(uid, headless=True):
     """
     根据uid 获取昵称
+
     :param uid: UID
     :param headless: 是否不显示浏览器界面，默认不显示
     :return: 昵称
@@ -66,6 +59,8 @@ def get_nickname(uid, headless=True):
 def get_uid(nickname, headless=True):
     """
     根据昵称获取uid
+    原理为通过在搜索界面搜索昵称，并选取第一个搜索结果，允许一定容错
+
     :param nickname: 昵称
     :param headless: 是否不显示浏览器界面，默认不显示
     :return: UID(str形式）
@@ -85,6 +80,7 @@ def get_uid(nickname, headless=True):
 def get_num(uid):
     """
     根据UID获取某人的听歌量
+
     :param uid: UID
     :return: 听歌量（int形式）
     """
@@ -102,6 +98,7 @@ def get_num(uid):
 def get_many(func, param_list, max_workers=20):
     """
     一个高阶函数，将一个单变量函数 func 用线程池方式多线程调用，参数遍历param_list
+
     :param func: 单变量函数
     :param param_list: 参数列表
     :param max_workers: 最大多线程数
