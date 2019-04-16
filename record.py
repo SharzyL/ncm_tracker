@@ -1,6 +1,7 @@
 from getter import *
 from database import Database
 from datetime import datetime
+from time import sleep
 
 database = Database('record.db') # database 实例
 track_dict = database.tracked(reversed=True) # 一个 uid:nickname 字典
@@ -44,5 +45,7 @@ def add_track(uid=None, nickname=None):
 
 
 if __name__ == '__main__':
-    record()
-    database.commit()
+    while True:
+        record()
+        database.commit()
+        sleep(3600)
