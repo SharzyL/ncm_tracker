@@ -1,7 +1,9 @@
-from getter import *
-from database import Database
+import shutil
 from datetime import datetime
 from time import sleep
+
+from database import Database
+from getter import *
 
 database = Database('record.db') # database 实例
 track_dict = database.tracked(reversed=True) # 一个 uid:nickname 字典
@@ -48,4 +50,5 @@ if __name__ == '__main__':
     while True:
         record()
         database.commit()
+        shutil.copy('record.db', 'C:\_dev\_path')
         sleep(3600)
