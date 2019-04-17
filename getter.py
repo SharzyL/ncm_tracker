@@ -111,22 +111,36 @@ def get_num(uid):
     return num
 
 
-def get_many(func, param_list, max_workers=20):
+def get_many(func, param_list, max_workers=20, result='list'):
     """
     一个高阶函数，将一个单变量函数 func 用线程池方式多线程调用，参数遍历param_list
 
     :param func: 单变量函数
     :param param_list: 参数列表
     :param max_workers: 最大多线程数
-    :return: 由 param:result 构成的字典
+    :param result: 见 return 说明
+    :return: result = 'list'  返回值的列表
+             result = 'dict'  由参数和返回值构成的字典
+             result = 'tuple' 由参数和返回值构成的序对的列表
     """
     result_dict = {}
     prog_bar = ProcessBar(len(param_list))
     executor = ThreadPoolExecutor(max_workers=max_workers)
     tasks = [executor.submit(prog_bar.wrap(func), param) for param in param_list]
-    for future in as_completed(tasks):
-        result = future.result()
-        param = result[0]
-        value = result[-1]
-        result_dict[param] = value
-    return result_dict
+    results = [future.result() for future in tasks]
+    if result == 'list':
+        return results
+    elif result == 'dict':
+        return dict(zip(param_list, results))
+    elif result == 'tuple':
+        return list(zip(param_list, results))
+    else:
+        raise ValueError('unknown parameter : result = ' + result)
+
+if __name__ == '__main__':
+    def task(x):
+        sleep(0.1)
+        return x
+
+    param = range(10)
+    print(get_many(task, param))

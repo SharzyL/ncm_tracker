@@ -48,15 +48,16 @@ class Database:
             self.cursor.execute('CREATE TABLE song_record (record_time REAL)')
             self.cursor.execute('CREATE TABLE nickname (uid INT NOT NULL, nickname TEXT NOT NULL)')
 
-    def tracked(self, reversed=False):
+    def tracked(self, reversed=False, key='uid'):
         """
         获取被记录的用户列表
 
         :param reversed: 是否颠倒字典键值
-        :return: 一个形如 nickname:uid 或 uid:nickname (reversed=True) 的字典，其中 uid 为int
+        :param key: 返回值的键值类型（'uid' or 'nickname'）
+        :return: 一个形如 nickname:uid 或 uid:nickname的字典（依参数key而定），其中 uid 为int类型
         """
         self.cursor.execute('SELECT nickname, uid FROM nickname')
-        return {row[1]: row[0] for row in self.cursor} if reversed \
+        return {row[1]: row[0] for row in self.cursor} if key == 'uid' \
             else {row[0]: row[1] for row in self.cursor}
 
     def track(self, uid, nickname):
@@ -98,6 +99,8 @@ class Database:
         :param data_dict: 由 昵称:听歌量 组成的字典
         :return: None
         """
+        if data_dict == {}:
+            return
         t = time.time()
         nickname_tuple = ('record_time',) + tuple((str(nickname) for nickname in data_dict))
         num_tuple = (t,) + tuple(data_dict.values())
@@ -114,7 +117,7 @@ class Database:
         self.cursor.execute('SELECT record_time, %s from song_record' % (nickname,))
         return {record_time: song_num for record_time, song_num in self.cursor.fetchall()}
 
-    def commit(self, close=True):
+    def commit(self, close=False):
         """
         提交对数据库的修改
 
@@ -125,7 +128,7 @@ class Database:
         if close:
             self.cursor.close()
 
-    def rollback(self, close=True):
+    def rollback(self, close=False):
         """
         放弃对数据库的修改
 

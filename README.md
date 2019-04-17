@@ -8,3 +8,6 @@
 - Selenium
 - Chrome + Chrome Webdriver
 - requests
+
+（for visualization)
+- matplotlib
